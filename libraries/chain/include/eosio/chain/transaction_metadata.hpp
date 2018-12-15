@@ -23,7 +23,6 @@ class transaction_metadata {
    public:
       transaction_id_type                                        id;
       transaction_id_type                                        signed_id;
-      signed_transaction                                         trx;
       packed_transaction_ptr                                     packed_trx;
       optional<pair<chain_id_type, flat_set<public_key_type>>>   signing_keys;
       std::future<pair<chain_id_type,flat_set<public_key_type>>> signing_keys_future;
@@ -38,13 +37,13 @@ class transaction_metadata {
       transaction_metadata operator=(transaction_metadata&&) = delete;
 
       explicit transaction_metadata( const signed_transaction& t, packed_transaction::compression_type c = packed_transaction::none )
-      :id(t.id()), trx(t), packed_trx(std::make_shared<packed_transaction>(t, c)) {
+      :id(t.id()), packed_trx(std::make_shared<packed_transaction>(t, c)) {
          //raw_packed = fc::raw::pack( static_cast<const transaction&>(trx) );
          signed_id = digest_type::hash(*packed_trx);
       }
 
       explicit transaction_metadata( const packed_transaction_ptr& ptrx )
-      :id(ptrx->id()), trx( ptrx->get_signed_transaction() ), packed_trx(ptrx) {
+      :id(ptrx->id()), packed_trx(ptrx) {
          //raw_packed = fc::raw::pack( static_cast<const transaction&>(trx) );
          signed_id = digest_type::hash(*packed_trx);
       }
@@ -53,8 +52,6 @@ class transaction_metadata {
 
       static void create_signing_keys_future( const transaction_metadata_ptr& mtrx,
                                               boost::asio::thread_pool& thread_pool, const chain_id_type& chain_id );
-
-      uint32_t total_actions()const { return trx.context_free_actions.size() + trx.actions.size(); }
 };
 
 } } // eosio::chain
